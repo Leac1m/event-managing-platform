@@ -1,8 +1,8 @@
 import { router, publicProcedure, protectedProcedure } from './trpc.js';
 import { z } from 'zod';
 import { db } from '../db/index.js';
-import { users, events, eventMembers } from '../db/schema/index.js';
-import { hashPassword, comparePassword, generateToken } from '../utils/auth.js';
+import { users, events, eventMembers, attendanceRecords } from '../db/schema/index.js';
+import { hashPassword, comparePassword, generateToken, verifyToken } from '../utils/auth.js';
 import { eq, or, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
@@ -226,6 +226,96 @@ export const appRouter = router({
 
       return member;
     }),
+
+  // Attendance & QR
+  getQRToken: protectedProcedure.query(({ ctx }) => {
+    const token = generateToken({ id: ctx.user.id, type: 'qr' });
+    return { token };
+  }),
+
+  scanQR: protectedProcedure
+    .input(z.object({ eventId: z.string(), token: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      // 1. Verify caller is organizer/creator
+      const callerRole = await db.query.eventMembers.findFirst({
+        where: and(eq(eventMembers.eventId, input.eventId), eq(eventMembers.userId, ctx.user.id)),
+      });
+
+      if (!callerRole || (callerRole.role !== 'organizer' && callerRole.role !== 'creator')) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only organizers can scan' });
+      }
+
+      // 2. Verify token
+      let decoded: unknown;
+      try {
+        decoded = verifyToken(input.token);
+      } catch {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid or expired QR code' });
+      }
+
+      if (
+        !decoded ||
+        typeof decoded !== 'object' ||
+        !('type' in decoded) ||
+        decoded.type !== 'qr' ||
+        !('id' in decoded) ||
+        typeof decoded.id !== 'string'
+      ) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid QR code type' });
+      }
+
+      const userId = decoded.id;
+
+      // 3. Verify user is registered for the event
+      const member = await db.query.eventMembers.findFirst({
+        where: and(eq(eventMembers.eventId, input.eventId), eq(eventMembers.userId, userId)),
+        with: {
+          user: true,
+        },
+      });
+
+      if (!member) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User is not registered for this event',
+        });
+      }
+
+      // 4. Record attendance
+      await db.insert(attendanceRecords).values({
+        eventId: input.eventId,
+        userId: userId,
+        scannedBy: ctx.user.id,
+      });
+
+      return {
+        user: {
+          username: member.user.username,
+          firstName: member.user.firstName,
+          lastName: member.user.lastName,
+          department: member.user.department,
+          matricNumber: member.user.matricNumber,
+          profileUrl: member.user.profileUrl,
+        },
+      };
+    }),
+
+  getAttendance: protectedProcedure.input(z.string()).query(async ({ input, ctx }) => {
+    const callerRole = await db.query.eventMembers.findFirst({
+      where: and(eq(eventMembers.eventId, input), eq(eventMembers.userId, ctx.user.id)),
+    });
+
+    if (!callerRole || (callerRole.role !== 'organizer' && callerRole.role !== 'creator')) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only organizers can view attendance' });
+    }
+
+    return db.query.attendanceRecords.findMany({
+      where: eq(attendanceRecords.eventId, input),
+      with: {
+        user: true,
+      },
+    });
+  }),
 });
 
 export type AppRouter = typeof appRouter;

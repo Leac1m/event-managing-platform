@@ -27,7 +27,7 @@
 - Implement organizer management.
 - Verification: All event tests pass.
 
-## Phase 5: QR Code & Attendance Implementation (TDD) [ ]
+## Phase 5: QR Code & Attendance Implementation (TDD) [x]
 - Write tests for QR token generation and `/scan` logic.
 - Implement QR generation utility.
 - Implement `/scan` logic (registration check + attendance recording).

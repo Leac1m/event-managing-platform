@@ -13,7 +13,7 @@
 - Set up base Express server and tRPC integration.
 - Verification: Schema migration successful, basic tRPC "hello" query works.
 
-## Phase 3: Authentication Implementation (TDD) [ ]
+## Phase 3: Authentication Implementation (TDD) [x]
 - Write tests for user registration, password hashing, and JWT generation.
 - Implement registration and login.
 - Integrate Nodemailer with Ethereal Email for dev verification.

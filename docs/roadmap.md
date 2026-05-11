@@ -6,7 +6,7 @@
 - Set up TypeScript configurations, ESLint, and Prettier at the root and package levels.
 - Verification: Successful `pnpm install` and lint/build check.
 
-## Phase 2: Database & Backend Foundation [ ]
+## Phase 2: Database & Backend Foundation [x]
 - Set up `better-sqlite3` and `drizzle-orm` in the `backend`.
 - Define Drizzle schemas (User, Event, EventMember, AttendanceRecord).
 - Configure Drizzle Kit for migrations.

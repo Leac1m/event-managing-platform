@@ -2,6 +2,7 @@ import express from 'express';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { appRouter } from './trpc/router.js';
 import { Context } from './trpc/trpc.js';
+import { verifyToken } from './utils/auth.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,9 +16,31 @@ app.use(
   '/trpc',
   trpcExpress.createExpressMiddleware({
     router: appRouter,
-    createContext: (): Context => ({
-      user: null, // TODO: Implement JWT middleware to populate this
-    }),
+    createContext: ({ req }): Context => {
+      const authHeader = req.headers.authorization;
+      let user = null;
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        try {
+          const decoded = verifyToken(token);
+          if (
+            decoded &&
+            typeof decoded === 'object' &&
+            'id' in decoded &&
+            'username' in decoded &&
+            typeof decoded.id === 'string' &&
+            typeof decoded.username === 'string'
+          ) {
+            user = { id: decoded.id, username: decoded.username };
+          }
+        } catch (error) {
+          // Token verification failed, user stays null
+        }
+      }
+
+      return { user };
+    },
   }),
 );
 

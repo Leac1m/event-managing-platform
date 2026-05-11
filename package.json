@@ -12,6 +12,7 @@
     "db:migrate": "pnpm --filter backend db:migrate",
     "db:push": "pnpm --filter backend db:push",
     "db:studio": "pnpm --filter backend db:studio",
+    "db:seed": "pnpm --filter backend db:seed",
     "lint": "eslint .",
     "type-check": "pnpm --filter backend exec tsc --noEmit && pnpm --filter frontend exec tsc -p tsconfig.app.json --noEmit"
   },

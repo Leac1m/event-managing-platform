@@ -13,6 +13,12 @@ function Root() {
       links: [
         httpBatchLink({
           url: '/trpc',
+          headers: () => {
+            const token = localStorage.getItem('token');
+            return {
+              authorization: token ? `Bearer ${token}` : '',
+            };
+          },
         }),
       ],
     }),

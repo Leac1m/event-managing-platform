@@ -33,7 +33,7 @@
 - Implement `/scan` logic (registration check + attendance recording).
 - Verification: All attendance tests pass.
 
-## Phase 6: Frontend Foundation & Auth UI [ ]
+## Phase 6: Frontend Foundation & Auth UI [x]
 - Initialize Vite React app in `packages/frontend`.
 - Install Tailwind CSS and shadcn/ui.
 - Set up tRPC React Query client.

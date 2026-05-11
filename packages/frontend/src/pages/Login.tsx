@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { ArrowRight, LockKeyhole, Sparkles, UserCircle2 } from 'lucide-react';
 import { trpc } from '../lib/trpc';
 
 export default function Login() {
@@ -25,53 +26,86 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="-space-y-px rounded-md shadow-sm">
+    <div className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-layout">
+          <div className="space-y-6">
             <div>
-              <input
-                type="text"
-                required
-                className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+              <div className="eyebrow">
+                <Sparkles className="h-3.5 w-3.5" />
+                Sign in
+              </div>
+              <h1 className="hero-title text-[clamp(2rem,4vw,3.2rem)]">Welcome back.</h1>
+              <p className="hero-copy max-w-2xl">
+                Sign in to view your dashboard, access your QR pass, and manage the events you own
+                or joined.
+              </p>
             </div>
-            <div>
-              <input
-                type="password"
-                required
-                className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="field-group">
+                <label className="field-label">Username</label>
+                <div className="relative">
+                  <UserCircle2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                  <input
+                    type="text"
+                    required
+                    className="field pl-10"
+                    placeholder="organizer1"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="field-group">
+                <label className="field-label">Password</label>
+                <div className="relative">
+                  <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                  <input
+                    type="password"
+                    required
+                    className="field pl-10"
+                    placeholder="Your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {error && <p className="text-sm text-[var(--color-accent)]">{error}</p>}
+
+              <button type="submit" disabled={loginMutation.isPending} className="btn btn--primary w-full">
+                {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+                <ArrowRight size={16} />
+              </button>
+            </form>
+
+            <div className="text-sm text-[var(--color-text-secondary)]">
+              <span>Need an account?</span>{' '}
+              <Link to="/register" className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]">
+                Register instead
+              </Link>
             </div>
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loginMutation.isPending}
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
-            >
-              {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
-        <div className="text-center">
-          <Link to="/register" className="text-indigo-600 hover:text-indigo-500 text-sm">
-            Don't have an account? Register
-          </Link>
+          <aside className="auth-aside">
+            <div className="eyebrow mb-0">Platform access</div>
+            <div className="auth-metric">
+              <div>
+                <strong>Protected routes</strong>
+                <span>JWT-backed session handling</span>
+              </div>
+              <LockKeyhole size={18} className="text-[var(--color-primary)]" />
+            </div>
+            <div className="auth-metric">
+              <div>
+                <strong>Attendance QR</strong>
+                <span>Scan and verify in real time</span>
+              </div>
+              <Sparkles size={18} className="text-[var(--color-info)]" />
+            </div>
+          </aside>
         </div>
       </div>
     </div>

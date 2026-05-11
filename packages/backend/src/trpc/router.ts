@@ -153,8 +153,47 @@ export const appRouter = router({
       department: user.department,
       matricNumber: user.matricNumber,
       profileUrl: user.profileUrl,
+      gender: user.gender,
+      phoneNumber: user.phoneNumber,
     };
   }),
+
+  updateProfile: protectedProcedure
+    .input(
+      z.object({
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        department: z.string().optional(),
+        matricNumber: z.string().optional(),
+        phoneNumber: z.string().optional(),
+        profileUrl: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const [updatedUser] = await db
+        .update(users)
+        .set(input)
+        .where(eq(users.id, ctx.user.id))
+        .returning();
+      return updatedUser;
+    }),
+
+  resendVerification: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, input.email),
+      });
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+      if (user.emailVerified) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email already verified' });
+      }
+      const token = generateToken({ id: user.id, type: 'email_verification' });
+      await sendVerificationEmail(user.email, token);
+      return { success: true };
+    }),
 
   // Events
   createEvent: protectedProcedure
@@ -186,6 +225,112 @@ export const appRouter = router({
       });
 
       return newEvent;
+    }),
+
+  updateEvent: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        location: z.string().optional(),
+        startTime: z.date().optional(),
+        endTime: z.date().optional(),
+        type: z.enum(['open', 'private']).optional(),
+        passcode: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...data } = input;
+      const member = await db.query.eventMembers.findFirst({
+        where: and(eq(eventMembers.eventId, id), eq(eventMembers.userId, ctx.user.id)),
+      });
+
+      if (!member || (member.role !== 'creator' && member.role !== 'organizer')) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to update this event' });
+      }
+
+      const [updatedEvent] = await db.update(events).set(data).where(eq(events.id, id)).returning();
+      return updatedEvent;
+    }),
+
+  deleteEvent: protectedProcedure.input(z.string()).mutation(async ({ input, ctx }) => {
+    const member = await db.query.eventMembers.findFirst({
+      where: and(eq(eventMembers.eventId, input), eq(eventMembers.userId, ctx.user.id)),
+    });
+
+    if (!member || member.role !== 'creator') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the creator can delete the event' });
+    }
+
+    await db.delete(events).where(eq(events.id, input));
+    return { success: true };
+  }),
+
+  publishEvent: protectedProcedure.input(z.string()).mutation(async ({ input, ctx }) => {
+    const member = await db.query.eventMembers.findFirst({
+      where: and(eq(eventMembers.eventId, input), eq(eventMembers.userId, ctx.user.id)),
+    });
+
+    if (!member || (member.role !== 'creator' && member.role !== 'organizer')) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to publish this event' });
+    }
+
+    const [updatedEvent] = await db
+      .update(events)
+      .set({ status: 'published' })
+      .where(eq(events.id, input))
+      .returning();
+    return updatedEvent;
+  }),
+
+  addOrganizer: protectedProcedure
+    .input(z.object({ eventId: z.string(), username: z.string(), email: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const caller = await db.query.eventMembers.findFirst({
+        where: and(eq(eventMembers.eventId, input.eventId), eq(eventMembers.userId, ctx.user.id)),
+      });
+
+      if (!caller || caller.role !== 'creator') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the creator can add organizers' });
+      }
+
+      const userToAdd = await db.query.users.findFirst({
+        where: and(eq(users.username, input.username), eq(users.email, input.email)),
+      });
+
+      if (!userToAdd) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+
+      const [member] = await db
+        .insert(eventMembers)
+        .values({
+          userId: userToAdd.id,
+          eventId: input.eventId,
+          role: 'organizer',
+        })
+        .returning();
+
+      return member;
+    }),
+
+  removeOrganizer: protectedProcedure
+    .input(z.object({ eventId: z.string(), userId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const caller = await db.query.eventMembers.findFirst({
+        where: and(eq(eventMembers.eventId, input.eventId), eq(eventMembers.userId, ctx.user.id)),
+      });
+
+      if (!caller || caller.role !== 'creator') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the creator can remove organizers' });
+      }
+
+      await db
+        .delete(eventMembers)
+        .where(and(eq(eventMembers.eventId, input.eventId), eq(eventMembers.userId, input.userId)));
+
+      return { success: true };
     }),
 
   getEvents: publicProcedure.query(async () => {

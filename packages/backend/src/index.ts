@@ -25,11 +25,14 @@ app.use(
 const frontendPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendPath));
 
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
   // If not a tRPC or static file request, serve index.html for SPA routing
   if (!req.path.startsWith('/trpc')) {
     res.sendFile(path.join(frontendPath, 'index.html'));
+    return;
   }
+
+  next();
 });
 
 app.listen(port, () => {

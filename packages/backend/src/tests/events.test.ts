@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { appRouter } from '../trpc/router.js';
 import { db } from '../db/index.js';
-import { users, events, eventMembers } from '../db/schema/index.js';
+import { attendanceRecords, users, events, eventMembers } from '../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 
 describe('Events API', () => {
@@ -9,6 +9,7 @@ describe('Events API', () => {
   let attendeeId: string;
 
   beforeAll(async () => {
+    await db.delete(attendanceRecords);
     await db.delete(eventMembers);
     await db.delete(events);
     await db.delete(users);

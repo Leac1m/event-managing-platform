@@ -1,6 +1,10 @@
 import nodemailer from 'nodemailer';
 
 export const sendVerificationEmail = async (email: string, token: string) => {
+  if (process.env.NODE_ENV === 'test') {
+    return { accepted: [email], token };
+  }
+
   // Generate test SMTP service account from ethereal.email
   const testAccount = await nodemailer.createTestAccount();
 

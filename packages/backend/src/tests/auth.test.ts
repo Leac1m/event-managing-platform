@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { appRouter } from '../trpc/router.js';
 import { db } from '../db/index.js';
-import { users } from '../db/schema/index.js';
+import { attendanceRecords, eventMembers, events, users } from '../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 
 describe('Authentication', () => {
   beforeAll(async () => {
-    // Clear users for clean test run
+    await db.delete(attendanceRecords);
+    await db.delete(eventMembers);
+    await db.delete(events);
     await db.delete(users);
   });
 
@@ -38,6 +40,13 @@ describe('Authentication', () => {
   it('should login with valid credentials after registration', async () => {
     const caller = appRouter.createCaller({ user: null });
 
+    const [verifiedUser] = await db
+      .update(users)
+      .set({ emailVerified: true })
+      .where(eq(users.username, 'testuser'))
+      .returning();
+    expect(verifiedUser).toBeDefined();
+
     const result = await caller.login({
       username: 'testuser',
       password: 'password123',
@@ -66,6 +75,8 @@ describe('Authentication', () => {
   it('should not allow login with wrong password', async () => {
     const caller = appRouter.createCaller({ user: null });
 
+    await db.update(users).set({ emailVerified: true }).where(eq(users.username, 'testuser'));
+
     await expect(
       caller.login({
         username: 'testuser',
@@ -75,10 +86,22 @@ describe('Authentication', () => {
   });
 
   it('should access me endpoint when authenticated', async () => {
-    const user = { id: 'some-id', username: 'testuser' };
+    const dbUser = await db.query.users.findFirst({
+      where: eq(users.username, 'testuser'),
+    });
+    expect(dbUser).toBeDefined();
+
+    const user = { id: dbUser!.id, username: 'testuser' };
     const caller = appRouter.createCaller({ user });
 
     const result = await caller.me();
-    expect(result).toEqual(user);
+    expect(result).toMatchObject({
+      id: dbUser!.id,
+      username: 'testuser',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      department: 'IT',
+    });
   });
 });

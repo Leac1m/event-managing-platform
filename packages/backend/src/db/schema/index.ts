@@ -1,5 +1,5 @@
+import { relations, sql } from 'drizzle-orm';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 export const users = sqliteTable('users', {
@@ -74,3 +74,39 @@ export const attendanceRecords = sqliteTable('attendance_records', {
     .notNull()
     .default(sql`(unixepoch())`),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  eventMembers: many(eventMembers),
+  attendanceRecords: many(attendanceRecords),
+}));
+
+export const eventsRelations = relations(events, ({ many }) => ({
+  members: many(eventMembers),
+  attendance: many(attendanceRecords),
+}));
+
+export const eventMembersRelations = relations(eventMembers, ({ one }) => ({
+  user: one(users, {
+    fields: [eventMembers.userId],
+    references: [users.id],
+  }),
+  event: one(events, {
+    fields: [eventMembers.eventId],
+    references: [events.id],
+  }),
+}));
+
+export const attendanceRecordsRelations = relations(attendanceRecords, ({ one }) => ({
+  event: one(events, {
+    fields: [attendanceRecords.eventId],
+    references: [events.id],
+  }),
+  user: one(users, {
+    fields: [attendanceRecords.userId],
+    references: [users.id],
+  }),
+  scanner: one(users, {
+    fields: [attendanceRecords.scannedBy],
+    references: [users.id],
+  }),
+}));

@@ -20,7 +20,7 @@
 - Implement email verification logic and `me` endpoint.
 - Verification: All auth tests pass.
 
-## Phase 4: Events API Core (TDD) [ ]
+## Phase 4: Events API Core (TDD) [x]
 - Write tests for Event CRUD and join logic.
 - Implement Event creation and listing.
 - Implement join logic for open and private events.

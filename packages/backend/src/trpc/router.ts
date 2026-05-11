@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../db/index.js';
 import { users, events, eventMembers, attendanceRecords } from '../db/schema/index.js';
 import { hashPassword, comparePassword, generateToken, verifyToken } from '../utils/auth.js';
+import { sendVerificationEmail } from '../utils/email.js';
 import { eq, or, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
@@ -44,11 +45,49 @@ export const appRouter = router({
         })
         .returning();
 
+      // Send verification email
+      const verificationToken = generateToken({ id: newUser.id, type: 'email_verification' });
+      await sendVerificationEmail(newUser.email, verificationToken);
+
       return {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
       };
+    }),
+
+  verifyEmail: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .mutation(async ({ input }) => {
+      let decoded: unknown;
+      try {
+        decoded = verifyToken(input.token);
+      } catch {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid or expired token' });
+      }
+
+      if (
+        !decoded ||
+        typeof decoded !== 'object' ||
+        !('type' in decoded) ||
+        decoded.type !== 'email_verification' ||
+        !('id' in decoded) ||
+        typeof decoded.id !== 'string'
+      ) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid token type' });
+      }
+
+      const [updatedUser] = await db
+        .update(users)
+        .set({ emailVerified: true })
+        .where(eq(users.id, decoded.id))
+        .returning();
+
+      if (!updatedUser) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+
+      return { success: true };
     }),
 
   login: publicProcedure
@@ -67,6 +106,13 @@ export const appRouter = router({
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Invalid username or password',
+        });
+      }
+
+      if (!user.emailVerified) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Please verify your email before logging in',
         });
       }
 

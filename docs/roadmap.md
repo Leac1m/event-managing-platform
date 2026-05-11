@@ -47,7 +47,7 @@
 - Implement QR code scanner for organizers.
 - Verification: End-to-end flow from event creation to scanning works in browser.
 
-## Phase 8: Dockerization & PWA [ ]
+## Phase 8: Dockerization & PWA [x]
 - Add `vite-plugin-pwa` to frontend.
 - Write multi-stage `Dockerfile` and `docker-compose.yml`.
 - Test deployment using Podman.

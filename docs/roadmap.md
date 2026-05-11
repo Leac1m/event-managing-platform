@@ -40,7 +40,7 @@
 - Implement routing and Auth pages (Login, Register).
 - Verification: User can log in/register via UI.
 
-## Phase 7: Events & Attendance UI [ ]
+## Phase 7: Events & Attendance UI [x]
 - Build Dashboard and Event Creation UI.
 - Build Event Details and Join interactions.
 - Implement QR code display for users.

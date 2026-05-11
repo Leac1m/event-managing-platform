@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "pnpm --filter backend test",
+    "lint": "eslint .",
+    "type-check": "pnpm --filter backend exec tsc --noEmit && pnpm --filter frontend exec tsc -p tsconfig.app.json --noEmit"
   },
   "keywords": [],
   "author": "",

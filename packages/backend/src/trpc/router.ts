@@ -91,8 +91,23 @@ export const appRouter = router({
       };
     }),
 
-  me: protectedProcedure.query(({ ctx }) => {
-    return ctx.user;
+  me: protectedProcedure.query(async ({ ctx }) => {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, ctx.user.id),
+    });
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      department: user.department,
+      matricNumber: user.matricNumber,
+      profileUrl: user.profileUrl,
+    };
   }),
 
   // Events

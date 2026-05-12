@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { AlertTriangle, BadgeCheck, QrCode, ScanLine, Search } from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function ScanEvent() {
   const { id } = useParams<{ id: string }>();
@@ -16,19 +18,33 @@ export default function ScanEvent() {
     };
   } | null>(null);
   const [error, setError] = useState('');
+  const [manualToken, setManualToken] = useState('');
+  const { pushToast } = useToast();
 
   const scanMutation = trpc.scanQR.useMutation({
     onSuccess: (data) => {
       setScanResult(data);
       setError('');
+      pushToast({
+        title: 'Access granted',
+        description: `${data.user.firstName} ${data.user.lastName} checked in successfully.`,
+        variant: 'success',
+      });
     },
     onError: (err) => {
       setError(err.message);
       setScanResult(null);
+      pushToast({
+        title: 'Scan failed',
+        description: err.message,
+        variant: 'error',
+      });
     },
   });
 
   useEffect(() => {
+    if (!id) return;
+
     const scanner = new Html5QrcodeScanner(
       'reader',
       { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -47,47 +63,124 @@ export default function ScanEvent() {
     return () => {
       scanner.clear().catch((error) => console.error('Failed to clear scanner', error));
     };
-  }, [id]);
+  }, [id, scanMutation]);
+
+  const handleManualScan = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !manualToken.trim()) return;
+    setError('');
+    scanMutation.mutate({ eventId: id, token: manualToken.trim() });
+  };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-white p-8 rounded-lg shadow">
-        <h1 className="text-2xl font-bold mb-6">Scan Attendee QR</h1>
-        <div id="reader" className="w-full"></div>
-
-        {scanMutation.isPending && (
-          <p className="mt-4 text-indigo-600 animate-pulse text-center">Verifying QR...</p>
-        )}
-
-        {error && <div className="mt-4 bg-red-50 text-red-700 p-4 rounded-md">{error}</div>}
-
-        {scanResult && (
-          <div className="mt-4 bg-green-50 text-green-700 p-6 rounded-md border border-green-200">
-            <h2 className="text-xl font-bold mb-2">Access Granted!</h2>
-            <div className="space-y-1">
-              <p>
-                <span className="font-semibold">Name:</span> {scanResult.user.firstName}{' '}
-                {scanResult.user.lastName}
-              </p>
-              <p>
-                <span className="font-semibold">Username:</span> {scanResult.user.username}
-              </p>
-              <p>
-                <span className="font-semibold">Department:</span> {scanResult.user.department}
-              </p>
-              <p>
-                <span className="font-semibold">Matric Number:</span>{' '}
-                {scanResult.user.matricNumber || 'N/A'}
-              </p>
-            </div>
-            <button
-              onClick={() => setScanResult(null)}
-              className="mt-4 text-sm underline hover:text-green-800"
-            >
-              Clear and scan next
-            </button>
+    <div className="space-y-6">
+      <section className="page-hero">
+        <div>
+          <div className="eyebrow">
+            <ScanLine className="h-3.5 w-3.5" />
+            Scanner mode
           </div>
-        )}
+          <h1 className="hero-title">Scan attendee QR codes.</h1>
+          <p className="hero-copy max-w-2xl">
+            This view is for organizers. It checks membership first, then reveals the allowed
+            profile details and records attendance.
+          </p>
+        </div>
+
+        <div className="panel panel-pad space-y-3">
+          <div className="auth-metric">
+            <div>
+              <strong>Security</strong>
+              <span>Details show only for registered users</span>
+            </div>
+            <BadgeCheck size={18} className="text-[var(--color-success)]" />
+          </div>
+          <div className="auth-metric">
+            <div>
+              <strong>Feedback</strong>
+              <span>Success and error states are surfaced immediately</span>
+            </div>
+            <AlertTriangle size={18} className="text-[var(--color-warning)]" />
+          </div>
+        </div>
+      </section>
+
+      <section className="auth-card mx-auto max-w-5xl">
+        <div className="space-y-5">
+          <div className="scan-frame">
+            <div id="reader" className="w-full" />
+          </div>
+
+          <form onSubmit={handleManualScan} className="panel panel-pad space-y-4">
+            <div className="field-group">
+              <label className="field-label" htmlFor="manual-qr-token">
+                Manual QR token
+              </label>
+              <input
+                id="manual-qr-token"
+                type="text"
+                className="field"
+                placeholder="Paste the decoded QR token here"
+                value={manualToken}
+                onChange={(e) => setManualToken(e.target.value)}
+              />
+              <p className="field-hint">Use this if the camera is unavailable or the attendee shared a token directly.</p>
+            </div>
+            <button type="submit" disabled={scanMutation.isPending} className="btn btn--secondary w-full sm:w-auto">
+              <Search size={16} />
+              Verify manually
+            </button>
+          </form>
+
+          {scanMutation.isPending && (
+            <div className="panel panel-pad flex items-center justify-center gap-3 text-[var(--color-primary)]">
+              <QrCode size={18} className="animate-pulse" />
+              <p className="m-0">Verifying QR...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="panel panel-pad flex items-start gap-3 border-[rgba(255,77,109,0.25)] bg-[rgba(255,77,109,0.08)] text-[var(--color-accent)]">
+              <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+              <p className="m-0">{error}</p>
+            </div>
+          )}
+
+          {scanResult && (
+            <div className="panel panel-pad space-y-4 border-[rgba(34,217,138,0.25)] bg-[rgba(34,217,138,0.06)]">
+              <div className="flex items-center gap-3 text-[var(--color-success)]">
+                <BadgeCheck size={22} />
+                <h2 className="panel-title text-[var(--color-success)]">Access granted</h2>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <Detail label="Name" value={`${scanResult.user.firstName} ${scanResult.user.lastName}`} />
+                <Detail label="Username" value={scanResult.user.username} />
+                <Detail label="Department" value={scanResult.user.department} />
+                <Detail label="Matric number" value={scanResult.user.matricNumber || 'N/A'} />
+              </div>
+
+              <button onClick={() => setScanResult(null)} className="btn btn--secondary w-fit">
+                Clear and scan next
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="live-region" aria-live="polite" aria-atomic="true">
+        {scanResult ? 'Access granted. Attendee details loaded.' : error ? `Scan error: ${error}` : ''}
+      </div>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="auth-metric items-start">
+      <div>
+        <strong>{label}</strong>
+        <span>{value}</span>
       </div>
     </div>
   );

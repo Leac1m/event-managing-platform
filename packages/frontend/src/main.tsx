@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { trpc } from './lib/trpc';
 import App from './App.tsx';
+import { ToastProvider, ToastViewport } from './components/ui/toast';
 import './index.css';
 
 function Root() {
@@ -13,6 +14,20 @@ function Root() {
       links: [
         httpBatchLink({
           url: '/trpc',
+          fetch: async (input, init) => {
+            const hasAuthToken = Boolean(localStorage.getItem('token'));
+            const response = await fetch(input, init as RequestInit);
+            if (response.status === 401 && hasAuthToken) {
+              try {
+                localStorage.removeItem('token');
+              } catch (e) {
+                /* ignore */
+              }
+              window.location.href = '/login';
+              throw new Error('Unauthorized');
+            }
+            return response;
+          },
           headers: () => {
             const token = localStorage.getItem('token');
             return {
@@ -27,7 +42,10 @@ function Root() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <ToastProvider>
+          <App />
+          <ToastViewport />
+        </ToastProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

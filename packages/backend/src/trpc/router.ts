@@ -46,7 +46,7 @@ export const appRouter = router({
         .returning();
 
       // Send verification email
-      const verificationToken = generateToken({ id: newUser.id, type: 'email_verification' });
+      const verificationToken = generateToken({ id: newUser.id, type: 'email_verification' }, '24h');
       await sendVerificationEmail(newUser.email, verificationToken);
 
       return {
@@ -190,7 +190,7 @@ export const appRouter = router({
       if (user.emailVerified) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email already verified' });
       }
-      const token = generateToken({ id: user.id, type: 'email_verification' });
+      const token = generateToken({ id: user.id, type: 'email_verification' }, '24h');
       await sendVerificationEmail(user.email, token);
       return { success: true };
     }),
@@ -198,15 +198,20 @@ export const appRouter = router({
   // Events
   createEvent: protectedProcedure
     .input(
-      z.object({
-        name: z.string(),
-        description: z.string(),
-        location: z.string().optional(),
-        startTime: z.coerce.date(),
-        endTime: z.coerce.date(),
-        type: z.enum(['open', 'private']),
-        passcode: z.string().optional(),
-      }),
+      z
+        .object({
+          name: z.string(),
+          description: z.string(),
+          location: z.string().optional(),
+          startTime: z.coerce.date(),
+          endTime: z.coerce.date(),
+          type: z.enum(['open', 'private']),
+          passcode: z.string().optional(),
+        })
+        .refine((data) => data.endTime > data.startTime, {
+          message: 'End time must be later than start time',
+          path: ['endTime'],
+        }),
     )
     .mutation(async ({ input, ctx }) => {
       if (input.type === 'private' && !input.passcode) {
@@ -229,16 +234,21 @@ export const appRouter = router({
 
   updateEvent: protectedProcedure
     .input(
-      z.object({
-        id: z.string(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        location: z.string().optional(),
-        startTime: z.coerce.date().optional(),
-        endTime: z.coerce.date().optional(),
-        type: z.enum(['open', 'private']).optional(),
-        passcode: z.string().optional(),
-      }),
+      z
+        .object({
+          id: z.string(),
+          name: z.string().optional(),
+          description: z.string().optional(),
+          location: z.string().optional(),
+          startTime: z.coerce.date().optional(),
+          endTime: z.coerce.date().optional(),
+          type: z.enum(['open', 'private']).optional(),
+          passcode: z.string().optional(),
+        })
+        .refine((data) => !data.startTime || !data.endTime || data.endTime > data.startTime, {
+          message: 'End time must be later than start time',
+          path: ['endTime'],
+        }),
     )
     .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
@@ -359,6 +369,22 @@ export const appRouter = router({
     return event;
   }),
 
+  getMyEventRole: protectedProcedure.input(z.string()).query(async ({ input, ctx }) => {
+    const member = await db.query.eventMembers.findFirst({
+      where: and(eq(eventMembers.eventId, input), eq(eventMembers.userId, ctx.user.id)),
+    });
+
+    if (!member) {
+      return null;
+    }
+
+    return {
+      role: member.role,
+      eventId: member.eventId,
+      userId: member.userId,
+    };
+  }),
+
   joinEvent: protectedProcedure
     .input(z.object({ eventId: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -435,7 +461,7 @@ export const appRouter = router({
 
   // Attendance & QR
   getQRToken: protectedProcedure.query(({ ctx }) => {
-    const token = generateToken({ id: ctx.user.id, type: 'qr' });
+    const token = generateToken({ id: ctx.user.id, type: 'qr' }, '5m');
     return { token };
   }),
 
@@ -487,12 +513,18 @@ export const appRouter = router({
         });
       }
 
-      // 4. Record attendance
-      await db.insert(attendanceRecords).values({
-        eventId: input.eventId,
-        userId: userId,
-        scannedBy: ctx.user.id,
+      const existingAttendance = await db.query.attendanceRecords.findFirst({
+        where: and(eq(attendanceRecords.eventId, input.eventId), eq(attendanceRecords.userId, userId)),
       });
+
+      if (!existingAttendance) {
+        // 4. Record attendance
+        await db.insert(attendanceRecords).values({
+          eventId: input.eventId,
+          userId: userId,
+          scannedBy: ctx.user.id,
+        });
+      }
 
       return {
         user: {
@@ -519,6 +551,7 @@ export const appRouter = router({
       where: eq(attendanceRecords.eventId, input),
       with: {
         user: true,
+        scanner: true,
       },
     });
   }),

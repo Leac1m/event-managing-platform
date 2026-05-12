@@ -26,7 +26,7 @@ export default function EventDetails() {
 
   const eventId = id as string;
   const { data: event, isLoading, refetch } = trpc.getEventDetails.useQuery(eventId);
-  const { data: myEvents } = trpc.getMyEvents.useQuery();
+  const { data: myEvents, refetch: refetchMyEvents } = trpc.getMyEvents.useQuery();
   const { data: role } = trpc.getMyEventRole.useQuery(eventId, { enabled: Boolean(eventId) });
   const { data: attendance, refetch: refetchAttendance } = trpc.getAttendance.useQuery(eventId, {
     enabled: role?.role === 'creator' || role?.role === 'organizer',
@@ -124,10 +124,21 @@ export default function EventDetails() {
   const isOrganizer = role?.role === 'organizer' || role?.role === 'creator';
   const isCreator = role?.role === 'creator';
 
+  const handleRefreshEvent = () => {
+    // wait for 2 seconds to allow backend to update before refetching
+    setTimeout(() => {
+      refetchMyEvents();
+      if (isOrganizer) {
+        refetchAttendance();
+      }
+    }, 2000);
+  }
+
   const handleJoin = () => {
     setError('');
     if (event.type === 'open') {
       joinMutation.mutate({ eventId: event.id });
+      handleRefreshEvent();
     }
   };
 
@@ -135,6 +146,7 @@ export default function EventDetails() {
     e.preventDefault();
     setError('');
     joinPrivateMutation.mutate({ eventId: event.id, passcode });
+    handleRefreshEvent();
   };
 
   const handleAddOrganizer = (e: React.FormEvent) => {

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "pnpm --dir ../.. exec tsx watch packages/backend/src/index.ts",
+    "build": "pnpm --dir ../.. exec tsc -p packages/backend/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:dev": "vitest",
@@ -28,8 +29,13 @@
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "mailtrap": "^4.5.1",
     "nodemailer": "^8.0.7",
     "uuid": "^14.0.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0"
   }
 }

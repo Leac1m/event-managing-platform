@@ -198,14 +198,6 @@ export default function Dashboard() {
               <span className="stat-label">Live events</span>
               <span className="stat-value">{publishedCount}</span>
             </div>
-            <div className="stat-card">
-              <span className="stat-label">Profile</span>
-              <span className="stat-value">{me?.username}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Identity</span>
-              <span className="stat-value">Verified</span>
-            </div>
           </div>
         </div>
       </section>

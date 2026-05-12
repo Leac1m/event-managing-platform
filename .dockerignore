@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+dist
+**/dist
+sqlite_data
+.git
+.gitignore
+.DS_Store
+npm-debug.log*
+pnpm-debug.log*

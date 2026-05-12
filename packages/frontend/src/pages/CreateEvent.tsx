@@ -120,7 +120,6 @@ export default function CreateEvent() {
                   placeholder="Hall B, Onsite Campus"
                   onChange={handleChange}
                 />
-                <p className="field-hint">Leave blank for online events or add a precise room name.</p>
               </div>
             </div>
 
@@ -165,7 +164,6 @@ export default function CreateEvent() {
                   className="field"
                   onChange={handleChange}
                 />
-                <p className="field-hint">Make sure the end time is after the start time.</p>
               </div>
             </div>
 

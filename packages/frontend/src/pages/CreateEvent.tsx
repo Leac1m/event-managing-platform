@@ -28,6 +28,10 @@ export default function CreateEvent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (formData.startTime && formData.endTime && new Date(formData.endTime) <= new Date(formData.startTime)) {
+      setError('End time must be later than start time.');
+      return;
+    }
     createEventMutation.mutate({
       ...formData,
       startTime: new Date(formData.startTime),
@@ -79,8 +83,11 @@ export default function CreateEvent() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="field-grid field-grid--two">
               <div className="field-group">
-                <label className="field-label">Event name</label>
+                <label className="field-label" htmlFor="event-name">
+                  Event name
+                </label>
                 <input
+                  id="event-name"
                   name="name"
                   type="text"
                   required
@@ -90,20 +97,27 @@ export default function CreateEvent() {
                 />
               </div>
               <div className="field-group">
-                <label className="field-label">Location</label>
+                <label className="field-label" htmlFor="event-location">
+                  Location
+                </label>
                 <input
+                  id="event-location"
                   name="location"
                   type="text"
                   className="field"
                   placeholder="Hall B, Onsite Campus"
                   onChange={handleChange}
                 />
+                <p className="field-hint">Leave blank for online events or add a precise room name.</p>
               </div>
             </div>
 
             <div className="field-group">
-              <label className="field-label">Description</label>
+              <label className="field-label" htmlFor="event-description">
+                Description
+              </label>
               <textarea
+                id="event-description"
                 name="description"
                 required
                 rows={5}
@@ -115,8 +129,11 @@ export default function CreateEvent() {
 
             <div className="field-grid field-grid--two">
               <div className="field-group">
-                <label className="field-label">Start time</label>
+                <label className="field-label" htmlFor="event-start-time">
+                  Start time
+                </label>
                 <input
+                  id="event-start-time"
                   name="startTime"
                   type="datetime-local"
                   required
@@ -125,21 +142,28 @@ export default function CreateEvent() {
                 />
               </div>
               <div className="field-group">
-                <label className="field-label">End time</label>
+                <label className="field-label" htmlFor="event-end-time">
+                  End time
+                </label>
                 <input
+                  id="event-end-time"
                   name="endTime"
                   type="datetime-local"
                   required
                   className="field"
                   onChange={handleChange}
                 />
+                <p className="field-hint">Make sure the end time is after the start time.</p>
               </div>
             </div>
 
             <div className="field-grid field-grid--two">
               <div className="field-group">
-                <label className="field-label">Event type</label>
+                <label className="field-label" htmlFor="event-type">
+                  Event type
+                </label>
                 <select
+                  id="event-type"
                   name="type"
                   className="field--select"
                   onChange={handleChange}
@@ -151,8 +175,11 @@ export default function CreateEvent() {
               </div>
               {formData.type === 'private' ? (
                 <div className="field-group">
-                  <label className="field-label">Passcode</label>
+                  <label className="field-label" htmlFor="event-passcode">
+                    Passcode
+                  </label>
                   <input
+                    id="event-passcode"
                     name="passcode"
                     type="text"
                     required
@@ -160,6 +187,7 @@ export default function CreateEvent() {
                     placeholder="VIP2026"
                     onChange={handleChange}
                   />
+                  <p className="field-hint">Share this only with the people who should be able to join.</p>
                 </div>
               ) : (
                 <div className="field-group">
@@ -173,7 +201,11 @@ export default function CreateEvent() {
               )}
             </div>
 
-            {error && <p className="text-sm text-[var(--color-accent)]">{error}</p>}
+            {error && (
+              <p className="text-sm text-[var(--color-accent)]" role="alert" aria-live="polite">
+                {error}
+              </p>
+            )}
 
             <button type="submit" disabled={createEventMutation.isPending} className="btn btn--primary w-full">
               <Sparkles size={16} />

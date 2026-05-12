@@ -44,10 +44,13 @@ export default function Login() {
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="field-group">
-                <label className="field-label">Username</label>
+                <label className="field-label" htmlFor="login-username">
+                  Username
+                </label>
                 <div className="relative">
                   <UserCircle2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
                   <input
+                    id="login-username"
                     type="text"
                     required
                     className="field pl-10"
@@ -59,10 +62,13 @@ export default function Login() {
               </div>
 
               <div className="field-group">
-                <label className="field-label">Password</label>
+                <label className="field-label" htmlFor="login-password">
+                  Password
+                </label>
                 <div className="relative">
                   <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
                   <input
+                    id="login-password"
                     type="password"
                     required
                     className="field pl-10"
@@ -71,9 +77,14 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+                <p className="field-hint">Use the account password you created during registration.</p>
               </div>
 
-              {error && <p className="text-sm text-[var(--color-accent)]">{error}</p>}
+              {error && (
+                <p className="text-sm text-[var(--color-accent)]" role="alert" aria-live="polite">
+                  {error}
+                </p>
+              )}
 
               <button type="submit" disabled={loginMutation.isPending} className="btn btn--primary w-full">
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}

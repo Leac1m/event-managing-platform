@@ -29,6 +29,10 @@ export default function Register() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
     registerMutation.mutate(formData);
   };
 
@@ -56,8 +60,11 @@ export default function Register() {
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="field-grid field-grid--two">
                 <div className="field-group">
-                  <label className="field-label">First name</label>
+                  <label className="field-label" htmlFor="register-first-name">
+                    First name
+                  </label>
                   <input
+                    id="register-first-name"
                     name="firstName"
                     type="text"
                     required
@@ -67,8 +74,11 @@ export default function Register() {
                   />
                 </div>
                 <div className="field-group">
-                  <label className="field-label">Last name</label>
+                  <label className="field-label" htmlFor="register-last-name">
+                    Last name
+                  </label>
                   <input
+                    id="register-last-name"
                     name="lastName"
                     type="text"
                     required
@@ -80,8 +90,11 @@ export default function Register() {
               </div>
 
               <div className="field-group">
-                <label className="field-label">Username</label>
+                <label className="field-label" htmlFor="register-username">
+                  Username
+                </label>
                 <input
+                  id="register-username"
                   name="username"
                   type="text"
                   required
@@ -92,8 +105,11 @@ export default function Register() {
               </div>
 
               <div className="field-group">
-                <label className="field-label">Email</label>
+                <label className="field-label" htmlFor="register-email">
+                  Email
+                </label>
                 <input
+                  id="register-email"
                   name="email"
                   type="email"
                   required
@@ -104,8 +120,11 @@ export default function Register() {
               </div>
 
               <div className="field-group">
-                <label className="field-label">Password</label>
+                <label className="field-label" htmlFor="register-password">
+                  Password
+                </label>
                 <input
+                  id="register-password"
                   name="password"
                   type="password"
                   required
@@ -113,12 +132,16 @@ export default function Register() {
                   placeholder="At least 8 characters"
                   onChange={handleChange}
                 />
+                <p className="field-hint">Use at least 8 characters so your account can be verified safely.</p>
               </div>
 
               <div className="field-grid field-grid--two">
                 <div className="field-group">
-                  <label className="field-label">Gender</label>
+                  <label className="field-label" htmlFor="register-gender">
+                    Gender
+                  </label>
                   <select
+                    id="register-gender"
                     name="gender"
                     className="field--select"
                     onChange={handleChange}
@@ -129,8 +152,11 @@ export default function Register() {
                   </select>
                 </div>
                 <div className="field-group">
-                  <label className="field-label">Department</label>
+                  <label className="field-label" htmlFor="register-department">
+                    Department
+                  </label>
                   <input
+                    id="register-department"
                     name="department"
                     type="text"
                     required
@@ -142,17 +168,25 @@ export default function Register() {
               </div>
 
               <div className="field-group">
-                <label className="field-label">Matric number</label>
+                <label className="field-label" htmlFor="register-matric-number">
+                  Matric number
+                </label>
                 <input
+                  id="register-matric-number"
                   name="matricNumber"
                   type="text"
                   className="field"
                   placeholder="Optional"
                   onChange={handleChange}
                 />
+                <p className="field-hint">Optional, but useful for organizer identity checks during scanning.</p>
               </div>
 
-              {error && <p className="text-sm text-[var(--color-accent)]">{error}</p>}
+              {error && (
+                <p className="text-sm text-[var(--color-accent)]" role="alert" aria-live="polite">
+                  {error}
+                </p>
+              )}
 
               <button type="submit" disabled={registerMutation.isPending} className="btn btn--primary w-full">
                 {registerMutation.isPending ? 'Registering...' : 'Register'}

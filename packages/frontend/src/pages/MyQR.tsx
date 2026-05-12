@@ -44,6 +44,7 @@ export default function MyQR() {
             </div>
 
             <aside className="auth-aside text-left">
+              <div className="badge badge--neutral w-fit">Show at check-in</div>
               <div className="auth-metric">
                 <div>
                   <strong>Name</strong>

@@ -31,7 +31,7 @@ export default function Navbar() {
             </Link>
 
             {me && (
-              <div className="hidden items-center gap-2 md:flex">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link to="/" className="btn btn--ghost text-sm">
                   <LayoutDashboard size={16} />
                   Dashboard
@@ -55,7 +55,7 @@ export default function Navbar() {
                   <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] shadow-[var(--shadow-glow-primary)]" />
                   {me.username}
                 </div>
-                <button onClick={handleLogout} className="btn btn--secondary text-sm">
+                <button onClick={handleLogout} className="btn btn--secondary text-sm" aria-label="Logout">
                   <LogOut size={16} />
                   Logout
                 </button>

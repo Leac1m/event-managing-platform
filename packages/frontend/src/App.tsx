@@ -9,11 +9,22 @@ import MyQR from './pages/MyQR';
 import ScanEvent from './pages/ScanEvent';
 import Navbar from './components/layout/Navbar';
 
+import { trpc } from './lib/trpc';
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('token');
-  if (!token) {
+  const { data: me, isLoading, isError } = trpc.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return <div className="p-8">Loading...</div>;
+  }
+
+  if (isError || !me) {
     return <Navigate to="/login" replace />;
   }
+
   return <>{children}</>;
 }
 

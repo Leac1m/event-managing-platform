@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { AlertTriangle, BadgeCheck, QrCode, ScanLine } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, QrCode, ScanLine, Search } from 'lucide-react';
 import { trpc } from '../lib/trpc';
 
 export default function ScanEvent() {
@@ -17,6 +17,7 @@ export default function ScanEvent() {
     };
   } | null>(null);
   const [error, setError] = useState('');
+  const [manualToken, setManualToken] = useState('');
 
   const scanMutation = trpc.scanQR.useMutation({
     onSuccess: (data) => {
@@ -30,6 +31,8 @@ export default function ScanEvent() {
   });
 
   useEffect(() => {
+    if (!id) return;
+
     const scanner = new Html5QrcodeScanner(
       'reader',
       { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -48,7 +51,14 @@ export default function ScanEvent() {
     return () => {
       scanner.clear().catch((error) => console.error('Failed to clear scanner', error));
     };
-  }, [id]);
+  }, [id, scanMutation]);
+
+  const handleManualScan = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !manualToken.trim()) return;
+    setError('');
+    scanMutation.mutate({ eventId: id, token: manualToken.trim() });
+  };
 
   return (
     <div className="space-y-6">
@@ -89,6 +99,27 @@ export default function ScanEvent() {
             <div id="reader" className="w-full" />
           </div>
 
+          <form onSubmit={handleManualScan} className="panel panel-pad space-y-4">
+            <div className="field-group">
+              <label className="field-label" htmlFor="manual-qr-token">
+                Manual QR token
+              </label>
+              <input
+                id="manual-qr-token"
+                type="text"
+                className="field"
+                placeholder="Paste the decoded QR token here"
+                value={manualToken}
+                onChange={(e) => setManualToken(e.target.value)}
+              />
+              <p className="field-hint">Use this if the camera is unavailable or the attendee shared a token directly.</p>
+            </div>
+            <button type="submit" disabled={scanMutation.isPending} className="btn btn--secondary w-full sm:w-auto">
+              <Search size={16} />
+              Verify manually
+            </button>
+          </form>
+
           {scanMutation.isPending && (
             <div className="panel panel-pad flex items-center justify-center gap-3 text-[var(--color-primary)]">
               <QrCode size={18} className="animate-pulse" />
@@ -124,6 +155,10 @@ export default function ScanEvent() {
           )}
         </div>
       </section>
+
+      <div className="live-region" aria-live="polite" aria-atomic="true">
+        {scanResult ? 'Access granted. Attendee details loaded.' : error ? `Scan error: ${error}` : ''}
+      </div>
     </div>
   );
 }

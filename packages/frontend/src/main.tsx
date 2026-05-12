@@ -13,6 +13,19 @@ function Root() {
       links: [
         httpBatchLink({
           url: '/trpc',
+          fetch: async (input, init) => {
+            const response = await fetch(input, init as RequestInit);
+            if (response.status === 401) {
+              try {
+                localStorage.removeItem('token');
+              } catch (e) {
+                /* ignore */
+              }
+              window.location.href = '/login';
+              throw new Error('Unauthorized');
+            }
+            return response;
+          },
           headers: () => {
             const token = localStorage.getItem('token');
             return {

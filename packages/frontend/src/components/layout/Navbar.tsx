@@ -1,13 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarDays, LayoutDashboard, LogOut, QrCode, Sparkles } from 'lucide-react';
 import { trpc } from '../../lib/trpc';
+import { useToast } from '../../components/ui/toast';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { data: me } = trpc.me.useQuery();
+  const { pushToast } = useToast();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    pushToast({
+      title: 'Signed out',
+      description: 'Your session has been cleared.',
+      variant: 'info',
+    });
     navigate('/login');
   };
 

@@ -2,20 +2,32 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, MailWarning, Sparkles } from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState('');
+  const { pushToast } = useToast();
 
   const verifyMutation = trpc.verifyEmail.useMutation({
     onSuccess: () => {
       setStatus('success');
+      pushToast({
+        title: 'Email verified',
+        description: 'You can now sign in to the platform.',
+        variant: 'success',
+      });
     },
     onError: (err) => {
       setStatus('error');
       setError(err.message);
+      pushToast({
+        title: 'Verification failed',
+        description: err.message,
+        variant: 'error',
+      });
     },
   });
 

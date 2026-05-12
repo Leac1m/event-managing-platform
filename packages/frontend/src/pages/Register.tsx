@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, BadgeInfo, Sparkles, UserPlus } from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -16,13 +17,24 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { pushToast } = useToast();
 
   const registerMutation = trpc.register.useMutation({
     onSuccess: () => {
+      pushToast({
+        title: 'Account created',
+        description: 'Check your inbox to verify your email before signing in.',
+        variant: 'success',
+      });
       navigate('/login');
     },
     onError: (err) => {
       setError(err.message);
+      pushToast({
+        title: 'Registration failed',
+        description: err.message,
+        variant: 'error',
+      });
     },
   });
 

@@ -2,20 +2,32 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, LockKeyhole, Sparkles, UserCircle2 } from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { pushToast } = useToast();
 
   const loginMutation = trpc.login.useMutation({
     onSuccess: (data) => {
       localStorage.setItem('token', data.token);
+      pushToast({
+        title: 'Signed in',
+        description: `Welcome back, ${data.user.username}.`,
+        variant: 'success',
+      });
       navigate('/');
     },
     onError: (err) => {
       setError(err.message);
+      pushToast({
+        title: 'Sign in failed',
+        description: err.message,
+        variant: 'error',
+      });
     },
   });
 

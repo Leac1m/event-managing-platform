@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { AlertTriangle, BadgeCheck, QrCode, ScanLine, Search } from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function ScanEvent() {
   const { id } = useParams<{ id: string }>();
@@ -18,15 +19,26 @@ export default function ScanEvent() {
   } | null>(null);
   const [error, setError] = useState('');
   const [manualToken, setManualToken] = useState('');
+  const { pushToast } = useToast();
 
   const scanMutation = trpc.scanQR.useMutation({
     onSuccess: (data) => {
       setScanResult(data);
       setError('');
+      pushToast({
+        title: 'Access granted',
+        description: `${data.user.firstName} ${data.user.lastName} checked in successfully.`,
+        variant: 'success',
+      });
     },
     onError: (err) => {
       setError(err.message);
       setScanResult(null);
+      pushToast({
+        title: 'Scan failed',
+        description: err.message,
+        variant: 'error',
+      });
     },
   });
 

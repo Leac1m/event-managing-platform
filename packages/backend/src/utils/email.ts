@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer';
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 export const sendVerificationEmail = async (email: string, token: string) => {
   if (process.env.NODE_ENV === 'test') {
     return { accepted: [email], token };
@@ -19,14 +21,15 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     },
   });
 
-  const verificationUrl = `http://localhost:3000/verify-email?token=${token}`;
+  const verificationUrl = new URL('/verify-email', FRONTEND_URL);
+  verificationUrl.searchParams.set('token', token);
 
   const info = await transporter.sendMail({
     from: '"Event Platform" <no-reply@eventplatform.com>',
     to: email,
     subject: 'Verify your email',
-    text: `Please verify your email by clicking the link: ${verificationUrl}`,
-    html: `<p>Please verify your email by clicking the link: <a href="${verificationUrl}">${verificationUrl}</a></p>`,
+    text: `Please verify your email by clicking the link: ${verificationUrl.toString()}`,
+    html: `<p>Please verify your email by clicking the link: <a href="${verificationUrl.toString()}">${verificationUrl.toString()}</a></p>`,
   });
 
   console.log('Message sent: %s', info.messageId);

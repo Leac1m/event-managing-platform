@@ -1,24 +1,100 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, Clock3, Globe, Lock, MapPin, ScanLine, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowRight,
+  Clock3,
+  Globe,
+  Lock,
+  MapPin,
+  ScanLine,
+  Settings2,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  UserPlus,
+} from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function EventDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { pushToast } = useToast();
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState('');
+  const [organizerForm, setOrganizerForm] = useState({ username: '', email: '' });
 
-  const { data: event, isLoading, refetch } = trpc.getEventDetails.useQuery(id as string);
+  const eventId = id as string;
+  const { data: event, isLoading, refetch } = trpc.getEventDetails.useQuery(eventId);
   const { data: myEvents } = trpc.getMyEvents.useQuery();
+  const { data: role } = trpc.getMyEventRole.useQuery(eventId, { enabled: Boolean(eventId) });
+  const { data: attendance, refetch: refetchAttendance } = trpc.getAttendance.useQuery(eventId, {
+    enabled: role?.role === 'creator' || role?.role === 'organizer',
+  });
 
   const joinMutation = trpc.joinEvent.useMutation({
-    onSuccess: () => refetch(),
-    onError: (err) => setError(err.message),
+    onSuccess: () => {
+      pushToast({ title: 'Joined event', description: 'Your membership has been recorded.', variant: 'success' });
+      refetch();
+    },
+    onError: (err) => {
+      setError(err.message);
+      pushToast({ title: 'Could not join event', description: err.message, variant: 'error' });
+    },
   });
 
   const joinPrivateMutation = trpc.joinPrivateEvent.useMutation({
-    onSuccess: () => refetch(),
-    onError: (err) => setError(err.message),
+    onSuccess: () => {
+      pushToast({
+        title: 'Joined private event',
+        description: 'You can now access the event QR pass.',
+        variant: 'success',
+      });
+      refetch();
+    },
+    onError: (err) => {
+      setError(err.message);
+      pushToast({ title: 'Could not join event', description: err.message, variant: 'error' });
+    },
+  });
+
+  const publishEventMutation = trpc.publishEvent.useMutation({
+    onSuccess: () => {
+      pushToast({
+        title: 'Event published',
+        description: 'The event is now visible on the dashboard.',
+        variant: 'success',
+      });
+      refetch();
+    },
+    onError: (err) => {
+      pushToast({ title: 'Publish failed', description: err.message, variant: 'error' });
+    },
+  });
+
+  const deleteEventMutation = trpc.deleteEvent.useMutation({
+    onSuccess: () => {
+      pushToast({ title: 'Event deleted', description: 'The event has been removed.', variant: 'info' });
+      navigate('/');
+    },
+    onError: (err) => {
+      pushToast({ title: 'Delete failed', description: err.message, variant: 'error' });
+    },
+  });
+
+  const addOrganizerMutation = trpc.addOrganizer.useMutation({
+    onSuccess: () => {
+      pushToast({
+        title: 'Organizer added',
+        description: 'The new organizer can now manage this event.',
+        variant: 'success',
+      });
+      setOrganizerForm({ username: '', email: '' });
+      refetch();
+    },
+    onError: (err) => {
+      pushToast({ title: 'Could not add organizer', description: err.message, variant: 'error' });
+    },
   });
 
   if (isLoading) {
@@ -45,6 +121,8 @@ export default function EventDetails() {
     return <div className="empty-state">Event not found. It may have been deleted or is not public yet.</div>;
 
   const isJoined = myEvents?.some((e) => e.id === event.id);
+  const isOrganizer = role?.role === 'organizer' || role?.role === 'creator';
+  const isCreator = role?.role === 'creator';
 
   const handleJoin = () => {
     setError('');
@@ -57,6 +135,18 @@ export default function EventDetails() {
     e.preventDefault();
     setError('');
     joinPrivateMutation.mutate({ eventId: event.id, passcode });
+  };
+
+  const handleAddOrganizer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isCreator) {
+      return;
+    }
+    addOrganizerMutation.mutate({
+      eventId: event.id,
+      username: organizerForm.username,
+      email: organizerForm.email,
+    });
   };
 
   return (
@@ -142,6 +232,118 @@ export default function EventDetails() {
                 </button>
               </form>
             )}
+          </div>
+        )}
+
+        {isOrganizer && (
+          <div className="panel panel-pad space-y-5 border-[rgba(0,229,180,0.18)] bg-[rgba(255,255,255,0.03)]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="eyebrow mb-2">
+                  <Settings2 className="h-3.5 w-3.5" />
+                  Admin tools
+                </div>
+                <h2 className="panel-title">Manage this event</h2>
+                <p className="panel-subtitle">Publish the event, review attendance, and add another organizer.</p>
+              </div>
+              <span className="badge badge--primary">{role?.role}</span>
+            </div>
+
+            <div className="button-row">
+              {event.status === 'draft' && (
+                <button
+                  type="button"
+                  onClick={() => publishEventMutation.mutate(event.id)}
+                  disabled={publishEventMutation.isPending}
+                  className="btn btn--primary"
+                >
+                  <Sparkles size={16} />
+                  {publishEventMutation.isPending ? 'Publishing...' : 'Publish event'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => deleteEventMutation.mutate(event.id)}
+                disabled={deleteEventMutation.isPending}
+                className="btn btn--danger"
+              >
+                <Trash2 size={16} />
+                {deleteEventMutation.isPending ? 'Deleting...' : 'Delete event'}
+              </button>
+            </div>
+
+            {isCreator && (
+              <form onSubmit={handleAddOrganizer} className="space-y-4">
+                <div className="eyebrow mb-0">
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Add organizer
+                </div>
+                <div className="field-grid field-grid--two">
+                  <div className="field-group">
+                    <label className="field-label" htmlFor="organizer-username">
+                      Username
+                    </label>
+                    <input
+                      id="organizer-username"
+                      type="text"
+                      className="field"
+                      value={organizerForm.username}
+                      onChange={(e) => setOrganizerForm((current) => ({ ...current, username: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label" htmlFor="organizer-email">
+                      Email
+                    </label>
+                    <input
+                      id="organizer-email"
+                      type="email"
+                      className="field"
+                      value={organizerForm.email}
+                      onChange={(e) => setOrganizerForm((current) => ({ ...current, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
+                <button type="submit" className="btn btn--secondary" disabled={addOrganizerMutation.isPending}>
+                  <UserPlus size={16} />
+                  {addOrganizerMutation.isPending ? 'Adding...' : 'Add organizer'}
+                </button>
+              </form>
+            )}
+
+            <div className="space-y-3">
+              <div className="eyebrow mb-0">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Attendance
+              </div>
+              {attendance?.length ? (
+                <div className="grid gap-3">
+                  {attendance.map((record) => (
+                    <div key={record.id} className="auth-metric items-start">
+                      <div>
+                        <strong>
+                          {record.user.firstName} {record.user.lastName}
+                        </strong>
+                        <span>
+                          @{record.user.username} · {record.user.department}
+                          {record.user.matricNumber ? ` · ${record.user.matricNumber}` : ''}
+                        </span>
+                        <span>
+                          Scanned {new Date(record.scannedAt).toLocaleString()} by {record.scanner?.username || 'organizer'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No attendance has been recorded yet.</div>
+              )}
+              <button type="button" onClick={() => refetchAttendance()} className="btn btn--secondary w-fit">
+                Refresh attendance
+              </button>
+            </div>
           </div>
         )}
 

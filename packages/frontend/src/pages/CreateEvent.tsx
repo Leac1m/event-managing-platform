@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, Lock, MapPin, PlusCircle, Sparkles, TimerReset } from 'lucide-react';
 import { trpc } from '../lib/trpc';
+import { useToast } from '../components/ui/toast';
 
 export default function CreateEvent() {
   const [formData, setFormData] = useState({
@@ -15,13 +16,24 @@ export default function CreateEvent() {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { pushToast } = useToast();
 
   const createEventMutation = trpc.createEvent.useMutation({
     onSuccess: (data) => {
+      pushToast({
+        title: 'Event created',
+        description: 'Your event details are ready to share.',
+        variant: 'success',
+      });
       navigate(`/events/${data.id}`);
     },
     onError: (err) => {
       setError(err.message);
+      pushToast({
+        title: 'Could not create event',
+        description: err.message,
+        variant: 'error',
+      });
     },
   });
 

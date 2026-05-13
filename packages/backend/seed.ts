@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import { db } from './src/db/index.js';
@@ -30,7 +29,6 @@ async function copyPlaceholderImage(userId: string): Promise<string | null> {
     const destFile = path.join(profileDir, fileName);
 
     fs.copyFileSync(sourceFile, destFile);
-    const uploadRoot = process.env.PROFILE_UPLOAD_DIR || './uploads';
     return `/uploads/profiles/${userId}/${fileName}`;
   } catch (err) {
     console.warn(`⚠ Failed to copy placeholder image for user ${userId}:`, err);
@@ -62,7 +60,7 @@ async function seed() {
       gender: 'Female',
       department: 'Event Management',
       matricNumber: 'EM001',
-        profileUrl: await copyPlaceholderImage('organizer1'),
+      profileUrl: await copyPlaceholderImage('organizer1'),
     })
     .returning();
 
@@ -78,7 +76,7 @@ async function seed() {
       gender: 'Male',
       department: 'Computer Science',
       matricNumber: 'CS001',
-        profileUrl: await copyPlaceholderImage('attendee1'),
+      profileUrl: await copyPlaceholderImage('attendee1'),
     })
     .returning();
 
@@ -94,7 +92,7 @@ async function seed() {
       gender: 'Female',
       department: 'Mathematics',
       matricNumber: 'MATH001',
-        profileUrl: await copyPlaceholderImage('attendee2'),
+      profileUrl: await copyPlaceholderImage('attendee2'),
     })
     .returning();
 
@@ -110,7 +108,7 @@ async function seed() {
       gender: 'Male',
       department: 'Physics',
       matricNumber: 'PHYS001',
-        profileUrl: await copyPlaceholderImage('attendee3'),
+      profileUrl: await copyPlaceholderImage('attendee3'),
     })
     .returning();
 

@@ -186,7 +186,9 @@ export default function Dashboard() {
               Account snapshot
             </div>
             <h2 className="panel-title">Everything you need at a glance</h2>
-            <p className="panel-subtitle">A compact view of your event activity and current reach.</p>
+            <p className="panel-subtitle">
+              A compact view of your event activity and current reach.
+            </p>
           </div>
 
           <div className="stat-grid">

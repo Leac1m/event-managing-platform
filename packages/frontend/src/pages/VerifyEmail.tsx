@@ -66,7 +66,9 @@ export default function VerifyEmail() {
               <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[var(--color-success-muted)] text-[var(--color-success)]">
                 <CheckCircle2 size={28} />
               </div>
-              <p className="m-0 text-[var(--color-success)]">Your email has been successfully verified.</p>
+              <p className="m-0 text-[var(--color-success)]">
+                Your email has been successfully verified.
+              </p>
               <Link to="/login" className="btn btn--primary">
                 Sign in
               </Link>

@@ -29,7 +29,10 @@ export const appRouter = router({
       const newUser = await registerUser(input);
 
       // Send verification email
-      const verificationToken = generateToken({ id: newUser.id, type: 'email_verification' }, '24h');
+      const verificationToken = generateToken(
+        { id: newUser.id, type: 'email_verification' },
+        '24h',
+      );
       await sendVerificationEmail(newUser.email, verificationToken);
 
       return {
@@ -316,7 +319,10 @@ export const appRouter = router({
       });
 
       if (!caller || caller.role !== 'creator') {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the creator can remove organizers' });
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only the creator can remove organizers',
+        });
       }
 
       await db
@@ -497,7 +503,10 @@ export const appRouter = router({
       }
 
       const existingAttendance = await db.query.attendanceRecords.findFirst({
-        where: and(eq(attendanceRecords.eventId, input.eventId), eq(attendanceRecords.userId, userId)),
+        where: and(
+          eq(attendanceRecords.eventId, input.eventId),
+          eq(attendanceRecords.userId, userId),
+        ),
       });
 
       if (!existingAttendance) {

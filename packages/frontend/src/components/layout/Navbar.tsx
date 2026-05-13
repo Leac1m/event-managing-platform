@@ -96,7 +96,11 @@ export default function Navbar() {
                   <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] shadow-[var(--shadow-glow-primary)]" />
                   {me.username}
                 </div>
-                <button onClick={handleLogout} className="btn btn--secondary text-sm" aria-label="Logout">
+                <button
+                  onClick={handleLogout}
+                  className="btn btn--secondary text-sm"
+                  aria-label="Logout"
+                >
                   <LogOut size={16} />
                   Logout
                 </button>
@@ -125,15 +129,27 @@ export default function Navbar() {
             >
               {me && (
                 <>
-                  <Link to="/" onClick={closeSidebar} className="btn btn--ghost text-sm justify-start">
+                  <Link
+                    to="/"
+                    onClick={closeSidebar}
+                    className="btn btn--ghost text-sm justify-start"
+                  >
                     <LayoutDashboard size={16} />
                     Dashboard
                   </Link>
-                  <Link to="/create-event" onClick={closeSidebar} className="btn btn--ghost text-sm justify-start">
+                  <Link
+                    to="/create-event"
+                    onClick={closeSidebar}
+                    className="btn btn--ghost text-sm justify-start"
+                  >
                     <CalendarDays size={16} />
                     Create Event
                   </Link>
-                  <Link to="/my-qr" onClick={closeSidebar} className="btn btn--ghost text-sm justify-start">
+                  <Link
+                    to="/my-qr"
+                    onClick={closeSidebar}
+                    className="btn btn--ghost text-sm justify-start"
+                  >
                     <QrCode size={16} />
                     My QR
                   </Link>
@@ -142,7 +158,11 @@ export default function Navbar() {
                     <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] shadow-[var(--shadow-glow-primary)]" />
                     {me.username}
                   </div>
-                  <button onClick={handleLogout} className="btn btn--secondary text-sm justify-start" aria-label="Logout">
+                  <button
+                    onClick={handleLogout}
+                    className="btn btn--secondary text-sm justify-start"
+                    aria-label="Logout"
+                  >
                     <LogOut size={16} />
                     Logout
                   </button>
@@ -150,7 +170,11 @@ export default function Navbar() {
               )}
 
               {!me && (
-                <Link to="/login" onClick={closeSidebar} className="btn btn--secondary text-sm justify-start">
+                <Link
+                  to="/login"
+                  onClick={closeSidebar}
+                  className="btn btn--secondary text-sm justify-start"
+                >
                   Sign in
                 </Link>
               )}

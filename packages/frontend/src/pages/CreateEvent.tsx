@@ -40,7 +40,11 @@ export default function CreateEvent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (formData.startTime && formData.endTime && new Date(formData.endTime) <= new Date(formData.startTime)) {
+    if (
+      formData.startTime &&
+      formData.endTime &&
+      new Date(formData.endTime) <= new Date(formData.startTime)
+    ) {
       setError('End time must be later than start time.');
       return;
     }
@@ -197,7 +201,9 @@ export default function CreateEvent() {
                     placeholder="VIP2026"
                     onChange={handleChange}
                   />
-                  <p className="field-hint">Share this only with the people who should be able to join.</p>
+                  <p className="field-hint">
+                    Share this only with the people who should be able to join.
+                  </p>
                 </div>
               ) : (
                 <div className="field-group">
@@ -217,7 +223,11 @@ export default function CreateEvent() {
               </p>
             )}
 
-            <button type="submit" disabled={createEventMutation.isPending} className="btn btn--primary w-full">
+            <button
+              type="submit"
+              disabled={createEventMutation.isPending}
+              className="btn btn--primary w-full"
+            >
               <Sparkles size={16} />
               {createEventMutation.isPending ? 'Creating...' : 'Create event'}
             </button>

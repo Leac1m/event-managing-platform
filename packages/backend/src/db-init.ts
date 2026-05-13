@@ -34,7 +34,9 @@ async function initializeDatabase() {
     console.log(`📦 Running ${statements.length} migration statements...`);
 
     // Check if tables already exist
-    const tableResult = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='users'`).all();
+    const tableResult = db
+      .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='users'`)
+      .all();
 
     if (tableResult.length > 0) {
       console.log('✅ Database schema already exists, skipping migration');

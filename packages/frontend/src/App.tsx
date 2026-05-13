@@ -12,7 +12,11 @@ import Navbar from './components/layout/Navbar';
 import { trpc } from './lib/trpc';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { data: me, isLoading, isError } = trpc.me.useQuery(undefined, {
+  const {
+    data: me,
+    isLoading,
+    isError,
+  } = trpc.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
   });

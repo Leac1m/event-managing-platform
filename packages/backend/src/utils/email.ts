@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { MailtrapTransport } from "mailtrap";
-import env from './env.js'; 
+import { MailtrapTransport } from 'mailtrap';
+import env from './env.js';
 
 const FRONTEND_URL = env.FRONTEND_URL;
 
@@ -9,26 +9,21 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     return { accepted: [email], token };
   }
 
-
   const transporter = nodemailer.createTransport(
     MailtrapTransport({
       token: env.MAILTRAP_TOKEN,
-    })
+    }),
   );
 
   const verificationUrl = new URL('/verify-email', FRONTEND_URL);
   verificationUrl.searchParams.set('token', token);
 
   const sender = {
-    address: "hello@demomailtrap.co",
-    name: "Mailtrap Test",
+    address: 'hello@demomailtrap.co',
+    name: 'Mailtrap Test',
   };
 
-
-  const recipients = [
-    "michaelobe3@gmail.com",
-  ];
-
+  const recipients = ['michaelobe3@gmail.com'];
 
   const info = await transporter.sendMail({
     from: sender,

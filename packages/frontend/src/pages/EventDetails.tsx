@@ -34,7 +34,11 @@ export default function EventDetails() {
 
   const joinMutation = trpc.joinEvent.useMutation({
     onSuccess: () => {
-      pushToast({ title: 'Joined event', description: 'Your membership has been recorded.', variant: 'success' });
+      pushToast({
+        title: 'Joined event',
+        description: 'Your membership has been recorded.',
+        variant: 'success',
+      });
       refetch();
     },
     onError: (err) => {
@@ -74,7 +78,11 @@ export default function EventDetails() {
 
   const deleteEventMutation = trpc.deleteEvent.useMutation({
     onSuccess: () => {
-      pushToast({ title: 'Event deleted', description: 'The event has been removed.', variant: 'info' });
+      pushToast({
+        title: 'Event deleted',
+        description: 'The event has been removed.',
+        variant: 'info',
+      });
       navigate('/');
     },
     onError: (err) => {
@@ -118,11 +126,15 @@ export default function EventDetails() {
     );
   }
   if (!event)
-    return <div className="empty-state">Event not found. It may have been deleted or is not public yet.</div>;
+    return (
+      <div className="empty-state">
+        Event not found. It may have been deleted or is not public yet.
+      </div>
+    );
 
   const isJoined = myEvents?.some((e) => e.id === event.id);
   const isOrganizer = role?.role === 'organizer' || role?.role === 'creator';
-  const isCreator = false //role?.role === 'creator';
+  const isCreator = false; //role?.role === 'creator';
 
   const handleRefreshEvent = () => {
     // wait for 2 seconds to allow backend to update before refetching
@@ -132,7 +144,7 @@ export default function EventDetails() {
         refetchAttendance();
       }
     }, 2000);
-  }
+  };
 
   const handleJoin = () => {
     setError('');
@@ -166,7 +178,11 @@ export default function EventDetails() {
       <section className="page-hero">
         <div>
           <div className="eyebrow">
-            {event.type === 'open' ? <Globe className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+            {event.type === 'open' ? (
+              <Globe className="h-3.5 w-3.5" />
+            ) : (
+              <Lock className="h-3.5 w-3.5" />
+            )}
             Event details
           </div>
           <h1 className="hero-title">{event.name}</h1>
@@ -185,7 +201,8 @@ export default function EventDetails() {
             <div>
               <strong>Schedule</strong>
               <span>
-                {new Date(event.startTime).toLocaleString()} - {new Date(event.endTime).toLocaleString()}
+                {new Date(event.startTime).toLocaleString()} -{' '}
+                {new Date(event.endTime).toLocaleString()}
               </span>
             </div>
             <Clock3 size={18} className="text-[var(--color-info)]" />
@@ -201,14 +218,18 @@ export default function EventDetails() {
       </section>
 
       <section className="panel panel-pad space-y-5 max-w-4xl">
-        {!isOrganizer && (
-          isJoined ? (
+        {!isOrganizer &&
+          (isJoined ? (
             <div className="panel panel-pad border-[rgba(34,217,138,0.22)] bg-[rgba(34,217,138,0.06)]">
               <div className="flex items-center gap-3 text-[var(--color-success)]">
                 <ShieldCheck size={20} />
-                <h2 className="panel-title text-[var(--color-success)]">You are registered for this event</h2>
+                <h2 className="panel-title text-[var(--color-success)]">
+                  You are registered for this event
+                </h2>
               </div>
-              <p className="panel-subtitle mt-2">Open your QR pass when you arrive so organizers can verify attendance quickly.</p>
+              <p className="panel-subtitle mt-2">
+                Open your QR pass when you arrive so organizers can verify attendance quickly.
+              </p>
               <div className="button-row mt-4">
                 <Link to="/my-qr" className="btn btn--primary">
                   <ScanLine size={16} />
@@ -219,7 +240,11 @@ export default function EventDetails() {
           ) : (
             <div className="space-y-4">
               {event.type === 'open' ? (
-                <button onClick={handleJoin} disabled={joinMutation.isPending} className="btn btn--primary">
+                <button
+                  onClick={handleJoin}
+                  disabled={joinMutation.isPending}
+                  className="btn btn--primary"
+                >
                   {joinMutation.isPending ? 'Joining...' : 'Join event'}
                   <ArrowRight size={16} />
                 </button>
@@ -239,15 +264,18 @@ export default function EventDetails() {
                     />
                     <p className="field-hint">Ask the organizer for the private access code.</p>
                   </div>
-                  <button type="submit" disabled={joinPrivateMutation.isPending} className="btn btn--primary">
+                  <button
+                    type="submit"
+                    disabled={joinPrivateMutation.isPending}
+                    className="btn btn--primary"
+                  >
                     {joinPrivateMutation.isPending ? 'Joining...' : 'Join private event'}
                     <ArrowRight size={16} />
                   </button>
                 </form>
               )}
             </div>
-          )
-        )}
+          ))}
 
         {isOrganizer && (
           <div className="panel panel-pad space-y-5 border-[rgba(0,229,180,0.18)] bg-[rgba(255,255,255,0.03)]">
@@ -258,7 +286,9 @@ export default function EventDetails() {
                   Admin tools
                 </div>
                 <h2 className="panel-title">Manage this event</h2>
-                <p className="panel-subtitle">Publish the event, review attendance, and add another organizer.</p>
+                <p className="panel-subtitle">
+                  Publish the event, review attendance, and add another organizer.
+                </p>
               </div>
               <span className="badge badge--primary">{role?.role}</span>
             </div>
@@ -308,7 +338,9 @@ export default function EventDetails() {
                       type="text"
                       className="field"
                       value={organizerForm.username}
-                      onChange={(e) => setOrganizerForm((current) => ({ ...current, username: e.target.value }))}
+                      onChange={(e) =>
+                        setOrganizerForm((current) => ({ ...current, username: e.target.value }))
+                      }
                       required
                     />
                   </div>
@@ -321,12 +353,18 @@ export default function EventDetails() {
                       type="email"
                       className="field"
                       value={organizerForm.email}
-                      onChange={(e) => setOrganizerForm((current) => ({ ...current, email: e.target.value }))}
+                      onChange={(e) =>
+                        setOrganizerForm((current) => ({ ...current, email: e.target.value }))
+                      }
                       required
                     />
                   </div>
                 </div>
-                <button type="submit" className="btn btn--secondary" disabled={addOrganizerMutation.isPending}>
+                <button
+                  type="submit"
+                  className="btn btn--secondary"
+                  disabled={addOrganizerMutation.isPending}
+                >
                   <UserPlus size={16} />
                   {addOrganizerMutation.isPending ? 'Adding...' : 'Add organizer'}
                 </button>
@@ -351,7 +389,8 @@ export default function EventDetails() {
                           {record.user.matricNumber ? ` · ${record.user.matricNumber}` : ''}
                         </span>
                         <span>
-                          Scanned {new Date(record.scannedAt).toLocaleString()} by {record.scanner?.username || 'organizer'}
+                          Scanned {new Date(record.scannedAt).toLocaleString()} by{' '}
+                          {record.scanner?.username || 'organizer'}
                         </span>
                       </div>
                     </div>
@@ -360,7 +399,11 @@ export default function EventDetails() {
               ) : (
                 <div className="empty-state">No attendance has been recorded yet.</div>
               )}
-              <button type="button" onClick={() => refetchAttendance()} className="btn btn--secondary w-fit">
+              <button
+                type="button"
+                onClick={() => refetchAttendance()}
+                className="btn btn--secondary w-fit"
+              >
                 Refresh attendance
               </button>
             </div>

@@ -127,7 +127,8 @@ export default function Register() {
       });
       navigate('/login');
     } catch (submissionError) {
-      const message = submissionError instanceof Error ? submissionError.message : 'Registration failed';
+      const message =
+        submissionError instanceof Error ? submissionError.message : 'Registration failed';
       setError(message);
       pushToast({
         title: 'Registration failed',
@@ -231,7 +232,9 @@ export default function Register() {
                   placeholder="At least 8 characters"
                   onChange={handleChange}
                 />
-                <p className="field-hint">Use at least 8 characters so your account can be verified safely.</p>
+                <p className="field-hint">
+                  Use at least 8 characters so your account can be verified safely.
+                </p>
               </div>
 
               <div className="field-grid field-grid--two">
@@ -278,7 +281,9 @@ export default function Register() {
                   placeholder="Optional"
                   onChange={handleChange}
                 />
-                <p className="field-hint">Optional, but useful for organizer identity checks during scanning.</p>
+                <p className="field-hint">
+                  Optional, but useful for organizer identity checks during scanning.
+                </p>
               </div>
 
               <div className="field-group">
@@ -291,7 +296,11 @@ export default function Register() {
                 >
                   <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)]">
                     {profilePreview ? (
-                      <img src={profilePreview} alt="Profile preview" className="h-full w-full object-cover" />
+                      <img
+                        src={profilePreview}
+                        alt="Profile preview"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <Camera className="h-7 w-7 text-[var(--color-primary)]" />
                     )}
@@ -302,7 +311,8 @@ export default function Register() {
                       <span>{profileImage ? profileImage.name : 'Choose a profile image'}</span>
                     </div>
                     <p className="field-hint mt-1">
-                      Required. JPEG, PNG, or WebP up to 500KB. The image will be resized to 200x200.
+                      Required. JPEG, PNG, or WebP up to 500KB. The image will be resized to
+                      200x200.
                     </p>
                   </div>
                 </label>
@@ -330,7 +340,10 @@ export default function Register() {
 
             <div className="text-sm text-[var(--color-text-secondary)]">
               <span>Already have an account?</span>{' '}
-              <Link to="/login" className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]">
+              <Link
+                to="/login"
+                className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]"
+              >
                 Sign in
               </Link>
             </div>

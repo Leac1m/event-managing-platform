@@ -20,7 +20,7 @@ function Root() {
             if (response.status === 401 && hasAuthToken) {
               try {
                 localStorage.removeItem('token');
-              } catch (e) {
+              } catch {
                 /* ignore */
               }
               window.location.href = '/login';

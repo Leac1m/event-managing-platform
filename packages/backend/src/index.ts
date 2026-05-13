@@ -10,7 +10,12 @@ import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { registerUser } from './services/registration.js';
-import { ProfileImageError, getProfileUploadRoot, removeProfileImageDirectory, saveProfileImage } from './utils/profile-image.js';
+import {
+  ProfileImageError,
+  getProfileUploadRoot,
+  removeProfileImageDirectory,
+  saveProfileImage,
+} from './utils/profile-image.js';
 import { sendVerificationEmail } from './utils/email.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -117,7 +122,7 @@ app.use(
           ) {
             user = { id: decoded.id, username: decoded.username };
           }
-        } catch (error) {
+        } catch {
           // Token verification failed, user stays null
         }
       }

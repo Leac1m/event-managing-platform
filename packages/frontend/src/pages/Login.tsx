@@ -89,7 +89,9 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <p className="field-hint">Use the account password you created during registration.</p>
+                <p className="field-hint">
+                  Use the account password you created during registration.
+                </p>
               </div>
 
               {error && (
@@ -98,7 +100,11 @@ export default function Login() {
                 </p>
               )}
 
-              <button type="submit" disabled={loginMutation.isPending} className="btn btn--primary w-full">
+              <button
+                type="submit"
+                disabled={loginMutation.isPending}
+                className="btn btn--primary w-full"
+              >
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
                 <ArrowRight size={16} />
               </button>
@@ -106,7 +112,10 @@ export default function Login() {
 
             <div className="text-sm text-[var(--color-text-secondary)]">
               <span>Need an account?</span>{' '}
-              <Link to="/register" className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]">
+              <Link
+                to="/register"
+                className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]"
+              >
                 Register instead
               </Link>
             </div>

@@ -9,7 +9,10 @@ describe('profile image upload', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = path.join(os.tmpdir(), `profile-upload-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    tempDir = path.join(
+      os.tmpdir(),
+      `profile-upload-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    );
     process.env.PROFILE_UPLOAD_DIR = tempDir;
   });
 

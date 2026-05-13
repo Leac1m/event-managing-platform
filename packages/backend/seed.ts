@@ -1,7 +1,42 @@
+
+import fs from 'fs';
+import path from 'path';
 import { db } from './src/db/index.js';
 import { users, events, eventMembers } from './src/db/schema/index.js';
 import { hashPassword } from './src/utils/auth.js';
+import { fileURLToPath } from 'url';
 
+async function ensureProfileDirectory(userId: string) {
+  const uploadRoot = process.env.PROFILE_UPLOAD_DIR || './uploads';
+  const profileDir = path.join(uploadRoot, 'profiles', userId);
+  if (!fs.existsSync(profileDir)) {
+    fs.mkdirSync(profileDir, { recursive: true });
+  }
+  return profileDir;
+}
+
+async function copyPlaceholderImage(userId: string): Promise<string | null> {
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const sourceFile = path.join(__dirname, 'public', 'placeholder_avatar.jpg');
+    if (!fs.existsSync(sourceFile)) {
+      console.warn('⚠ Placeholder image not found, skipping profile photo');
+      return null;
+    }
+
+    const profileDir = await ensureProfileDirectory(userId);
+    const timestamp = Date.now();
+    const fileName = `${timestamp}-placeholder.jpg`;
+    const destFile = path.join(profileDir, fileName);
+
+    fs.copyFileSync(sourceFile, destFile);
+    const uploadRoot = process.env.PROFILE_UPLOAD_DIR || './uploads';
+    return `/uploads/profiles/${userId}/${fileName}`;
+  } catch (err) {
+    console.warn(`⚠ Failed to copy placeholder image for user ${userId}:`, err);
+    return null;
+  }
+}
 async function seed() {
   console.log('🌱 Seeding database...');
 
@@ -27,6 +62,7 @@ async function seed() {
       gender: 'Female',
       department: 'Event Management',
       matricNumber: 'EM001',
+        profileUrl: await copyPlaceholderImage('organizer1'),
     })
     .returning();
 
@@ -42,6 +78,7 @@ async function seed() {
       gender: 'Male',
       department: 'Computer Science',
       matricNumber: 'CS001',
+        profileUrl: await copyPlaceholderImage('attendee1'),
     })
     .returning();
 
@@ -57,6 +94,7 @@ async function seed() {
       gender: 'Female',
       department: 'Mathematics',
       matricNumber: 'MATH001',
+        profileUrl: await copyPlaceholderImage('attendee2'),
     })
     .returning();
 
@@ -72,6 +110,7 @@ async function seed() {
       gender: 'Male',
       department: 'Physics',
       matricNumber: 'PHYS001',
+        profileUrl: await copyPlaceholderImage('attendee3'),
     })
     .returning();
 

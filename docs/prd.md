@@ -90,11 +90,17 @@ An event creation and management platform that supports open and private events,
 ### Auth — `/api/auth`
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/register` | Create account (sends verification email) |
+| `POST` | `/register` | Create account with multipart/form-data profile photo upload (sends verification email) |
 | `GET` | `/verify-email?token=` | Verify email address |
 | `POST` | `/login` | Log in, returns session/JWT |
 | `POST` | `/logout` | Invalidate session |
 | `POST` | `/resend-verification` | Resend verification email |
+
+### Profile Upload Storage
+- Upload root: `/app/uploads`
+- Docker compose mount: `./uploads:/app/uploads`
+- Required permissions: the mounted directory must be writable by the container user so processed profile images can be saved and served after restart
+- Stored avatars: `/uploads/profiles/{user_id}/...webp`
 
 ### Users — `/api/users`
 | Method | Path | Description |

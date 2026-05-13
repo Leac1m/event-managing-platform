@@ -18,6 +18,7 @@ FROM node:22-bookworm-slim AS prod
 WORKDIR /app
 ENV npm_config_nodedir="/usr/local/include/node"
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /app/uploads /app/data
 
 # Copy necessary files for pnpm install
 COPY --from=build /app/package.json /app/pnpm-workspace.yaml /app/pnpm-lock.yaml ./

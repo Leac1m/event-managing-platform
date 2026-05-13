@@ -1,55 +1,142 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, BadgeInfo, Sparkles, UserPlus } from 'lucide-react';
-import { trpc } from '../lib/trpc';
+import { ArrowRight, BadgeInfo, Camera, ImagePlus, Sparkles, UserPlus } from 'lucide-react';
 import { useToast } from '../components/ui/toast';
 
+type Gender = 'Male' | 'Female';
+
+type FormState = {
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+  department: string;
+  matricNumber: string;
+};
+
+const MAX_PROFILE_IMAGE_BYTES = 500 * 1024;
+const ALLOWED_PROFILE_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 export default function Register() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormState>({
     username: '',
     email: '',
     password: '',
     firstName: '',
     lastName: '',
-    gender: 'Male' as 'Male' | 'Female',
+    gender: 'Male',
     department: '',
     matricNumber: '',
   });
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { pushToast } = useToast();
 
-  const registerMutation = trpc.register.useMutation({
-    onSuccess: () => {
+  useEffect(() => {
+    return () => {
+      if (profilePreview) {
+        URL.revokeObjectURL(profilePreview);
+      }
+    };
+  }, [profilePreview]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+
+    if (!file) {
+      setProfileImage(null);
+      setProfilePreview('');
+      return;
+    }
+
+    if (!ALLOWED_PROFILE_IMAGE_TYPES.has(file.type)) {
+      setProfileImage(null);
+      setProfilePreview('');
+      setError('Profile photo must be a JPEG, PNG, or WebP image.');
+      return;
+    }
+
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setProfileImage(null);
+      setProfilePreview('');
+      setError('Profile photo must be 500KB or smaller.');
+      return;
+    }
+
+    setError('');
+    setProfileImage(file);
+    setProfilePreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    if (!profileImage) {
+      setError('Profile photo is required.');
+      return;
+    }
+
+    const submission = new FormData();
+    submission.append('username', formData.username);
+    submission.append('email', formData.email);
+    submission.append('password', formData.password);
+    submission.append('firstName', formData.firstName);
+    submission.append('lastName', formData.lastName);
+    submission.append('gender', formData.gender);
+    submission.append('department', formData.department);
+
+    if (formData.matricNumber.trim()) {
+      submission.append('matricNumber', formData.matricNumber.trim());
+    }
+
+    submission.append('profileImage', profileImage);
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        body: submission,
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { message?: string };
+
+      if (!response.ok) {
+        const message = payload.message || 'Registration failed';
+        throw new Error(message);
+      }
+
       pushToast({
         title: 'Account created',
         description: 'Check your inbox to verify your email before signing in.',
         variant: 'success',
       });
       navigate('/login');
-    },
-    onError: (err) => {
-      setError(err.message);
+    } catch (submissionError) {
+      const message = submissionError instanceof Error ? submissionError.message : 'Registration failed';
+      setError(message);
       pushToast({
         title: 'Registration failed',
-        description: err.message,
+        description: message,
         variant: 'error',
       });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long.');
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-    registerMutation.mutate(formData);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -194,14 +281,49 @@ export default function Register() {
                 <p className="field-hint">Optional, but useful for organizer identity checks during scanning.</p>
               </div>
 
+              <div className="field-group">
+                <label className="field-label" htmlFor="register-profile-image">
+                  Profile photo
+                </label>
+                <label
+                  htmlFor="register-profile-image"
+                  className="flex cursor-pointer items-center gap-4 rounded-[var(--radius-xl)] border border-dashed border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] p-4 transition hover:border-[rgba(0,229,180,0.3)] hover:bg-[rgba(0,229,180,0.04)]"
+                >
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)]">
+                    {profilePreview ? (
+                      <img src={profilePreview} alt="Profile preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <Camera className="h-7 w-7 text-[var(--color-primary)]" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
+                      <ImagePlus size={16} className="text-[var(--color-primary)]" />
+                      <span>{profileImage ? profileImage.name : 'Choose a profile image'}</span>
+                    </div>
+                    <p className="field-hint mt-1">
+                      Required. JPEG, PNG, or WebP up to 500KB. The image will be resized to 200x200.
+                    </p>
+                  </div>
+                </label>
+                <input
+                  id="register-profile-image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  required
+                  className="sr-only"
+                  onChange={handleProfileImageChange}
+                />
+              </div>
+
               {error && (
                 <p className="text-sm text-[var(--color-accent)]" role="alert" aria-live="polite">
                   {error}
                 </p>
               )}
 
-              <button type="submit" disabled={registerMutation.isPending} className="btn btn--primary w-full">
-                {registerMutation.isPending ? 'Registering...' : 'Register'}
+              <button type="submit" disabled={isSubmitting} className="btn btn--primary w-full">
+                {isSubmitting ? 'Registering...' : 'Register'}
                 <ArrowRight size={16} />
               </button>
             </form>

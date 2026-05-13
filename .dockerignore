@@ -8,3 +8,5 @@ sqlite_data
 .DS_Store
 npm-debug.log*
 pnpm-debug.log*
+uploads
+sqlite_data

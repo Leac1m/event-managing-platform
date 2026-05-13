@@ -122,7 +122,7 @@ export default function EventDetails() {
 
   const isJoined = myEvents?.some((e) => e.id === event.id);
   const isOrganizer = role?.role === 'organizer' || role?.role === 'creator';
-  const isCreator = role?.role === 'creator';
+  const isCreator = false //role?.role === 'creator';
 
   const handleRefreshEvent = () => {
     // wait for 2 seconds to allow backend to update before refetching
@@ -201,50 +201,52 @@ export default function EventDetails() {
       </section>
 
       <section className="panel panel-pad space-y-5 max-w-4xl">
-        {isJoined ? (
-          <div className="panel panel-pad border-[rgba(34,217,138,0.22)] bg-[rgba(34,217,138,0.06)]">
-            <div className="flex items-center gap-3 text-[var(--color-success)]">
-              <ShieldCheck size={20} />
-              <h2 className="panel-title text-[var(--color-success)]">You are registered for this event</h2>
+        {!isOrganizer && (
+          isJoined ? (
+            <div className="panel panel-pad border-[rgba(34,217,138,0.22)] bg-[rgba(34,217,138,0.06)]">
+              <div className="flex items-center gap-3 text-[var(--color-success)]">
+                <ShieldCheck size={20} />
+                <h2 className="panel-title text-[var(--color-success)]">You are registered for this event</h2>
+              </div>
+              <p className="panel-subtitle mt-2">Open your QR pass when you arrive so organizers can verify attendance quickly.</p>
+              <div className="button-row mt-4">
+                <Link to="/my-qr" className="btn btn--primary">
+                  <ScanLine size={16} />
+                  Show my QR code
+                </Link>
+              </div>
             </div>
-            <p className="panel-subtitle mt-2">Open your QR pass when you arrive so organizers can verify attendance quickly.</p>
-            <div className="button-row mt-4">
-              <Link to="/my-qr" className="btn btn--primary">
-                <ScanLine size={16} />
-                Show my QR code
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {event.type === 'open' ? (
-              <button onClick={handleJoin} disabled={joinMutation.isPending} className="btn btn--primary">
-                {joinMutation.isPending ? 'Joining...' : 'Join event'}
-                <ArrowRight size={16} />
-              </button>
-            ) : (
-              <form onSubmit={handleJoinPrivate} className="space-y-4 max-w-md">
-                <div className="field-group">
-                  <label className="field-label" htmlFor="event-passcode-input">
-                    Enter passcode
-                  </label>
-                  <input
-                    id="event-passcode-input"
-                    type="text"
-                    className="field"
-                    value={passcode}
-                    onChange={(e) => setPasscode(e.target.value)}
-                    required
-                  />
-                  <p className="field-hint">Ask the organizer for the private access code.</p>
-                </div>
-                <button type="submit" disabled={joinPrivateMutation.isPending} className="btn btn--primary">
-                  {joinPrivateMutation.isPending ? 'Joining...' : 'Join private event'}
+          ) : (
+            <div className="space-y-4">
+              {event.type === 'open' ? (
+                <button onClick={handleJoin} disabled={joinMutation.isPending} className="btn btn--primary">
+                  {joinMutation.isPending ? 'Joining...' : 'Join event'}
                   <ArrowRight size={16} />
                 </button>
-              </form>
-            )}
-          </div>
+              ) : (
+                <form onSubmit={handleJoinPrivate} className="space-y-4 max-w-md">
+                  <div className="field-group">
+                    <label className="field-label" htmlFor="event-passcode-input">
+                      Enter passcode
+                    </label>
+                    <input
+                      id="event-passcode-input"
+                      type="text"
+                      className="field"
+                      value={passcode}
+                      onChange={(e) => setPasscode(e.target.value)}
+                      required
+                    />
+                    <p className="field-hint">Ask the organizer for the private access code.</p>
+                  </div>
+                  <button type="submit" disabled={joinPrivateMutation.isPending} className="btn btn--primary">
+                    {joinPrivateMutation.isPending ? 'Joining...' : 'Join private event'}
+                    <ArrowRight size={16} />
+                  </button>
+                </form>
+              )}
+            </div>
+          )
         )}
 
         {isOrganizer && (
@@ -262,6 +264,12 @@ export default function EventDetails() {
             </div>
 
             <div className="button-row">
+              {isOrganizer && (
+                <Link to={`/events/${event.id}/scan`} className="btn btn--secondary">
+                  <ScanLine size={16} />
+                  Open scanner
+                </Link>
+              )}
               {event.status === 'draft' && (
                 <button
                   type="button"

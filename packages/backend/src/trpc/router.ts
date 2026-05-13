@@ -2,10 +2,11 @@ import { router, publicProcedure, protectedProcedure } from './trpc.js';
 import { z } from 'zod';
 import { db } from '../db/index.js';
 import { users, events, eventMembers, attendanceRecords } from '../db/schema/index.js';
-import { hashPassword, comparePassword, generateToken, verifyToken } from '../utils/auth.js';
+import { comparePassword, generateToken, verifyToken } from '../utils/auth.js';
 import { sendVerificationEmail } from '../utils/email.js';
-import { eq, or, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
+import { registerUser } from '../services/registration.js';
 
 export const appRouter = router({
   // Auth
@@ -21,29 +22,11 @@ export const appRouter = router({
         department: z.string(),
         matricNumber: z.string().optional(),
         phoneNumber: z.string().optional(),
+        profileUrl: z.string().min(1),
       }),
     )
     .mutation(async ({ input }) => {
-      const existingUser = await db.query.users.findFirst({
-        where: or(eq(users.username, input.username), eq(users.email, input.email)),
-      });
-
-      if (existingUser) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'Username or email already exists',
-        });
-      }
-
-      const passwordHash = await hashPassword(input.password);
-
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          ...input,
-          passwordHash,
-        })
-        .returning();
+      const newUser = await registerUser(input);
 
       // Send verification email
       const verificationToken = generateToken({ id: newUser.id, type: 'email_verification' }, '24h');

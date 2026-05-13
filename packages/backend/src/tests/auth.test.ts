@@ -23,6 +23,7 @@ describe('Authentication', () => {
       lastName: 'User',
       gender: 'Male' as const,
       department: 'IT',
+      profileUrl: '/uploads/profiles/testuser/avatar.webp',
     };
 
     const result = await caller.register(input);
@@ -67,6 +68,7 @@ describe('Authentication', () => {
       lastName: 'User',
       gender: 'Male' as const,
       department: 'IT',
+      profileUrl: '/uploads/profiles/testuser/avatar.webp',
     };
 
     await expect(caller.register(input)).rejects.toThrow('Username or email already exists');

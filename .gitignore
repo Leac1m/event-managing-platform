@@ -4,3 +4,5 @@ dist
 *.sqlite
 sqlite.db
 *.sqlite-journal
+uploads
+sqlite_data

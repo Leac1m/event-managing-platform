@@ -33,6 +33,16 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-l
 COPY --from=build /app/packages/backend/dist ./packages/backend/dist
 COPY --from=build /app/packages/frontend/dist ./packages/frontend/dist
 
+# Copy migration files needed for db initialization
+COPY --from=build /app/packages/backend/drizzle ./packages/backend/drizzle
+
+# Copy seed file for optional seeding
+COPY --from=build /app/packages/backend/public ./packages/backend/public
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 EXPOSE 3001
 ENV PORT=3001
-CMD ["node", "packages/backend/dist/index.js"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
